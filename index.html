@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Mini Farm</title>
+<style>
+body{
+  margin:0;
+  background:#2c3e50;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  color:white;
+  font-family:Arial;
+}
+canvas{
+  background:#3cb371;
+  border:4px solid #fff;
+}
+#ui{
+  position:absolute;
+  top:10px;
+  left:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="ui">
+  <div id="day">Day: 1</div>
+  <div id="time">Time: Morning</div>
+  <div id="msg"></div>
+</div>
+
+<canvas id="game" width="400" height="400"></canvas>
+
+<script>
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+
+const TILE=40;
+const MAP=10;
+
+let day=1;
+let time="Morning";
+let ticks=0;
+
+const map=[];
+const crops=[];
+
+for(let y=0;y<MAP;y++){
+  map[y]=[];
+  crops[y]=[];
+  for(let x=0;x<MAP;x++){
+    map[y][x]="grass";
+    crops[y][x]=0; // 0 empty, 1 planted, 2 grown
+  }
+}
+
+// พื้นดินให้ปลูก
+for(let x=2;x<8;x++){
+  map[5][x]="soil";
+}
+
+const player={x:5,y:7};
+
+function draw(){
+  ctx.clearRect(0,0,400,400);
+
+  for(let y=0;y<MAP;y++){
+    for(let x=0;x<MAP;x++){
+      // tile
+      if(map[y][x]==="grass") ctx.fillStyle="#3cb371";
+      else ctx.fillStyle="#8b4513";
+      ctx.fillRect(x*TILE,y*TILE,TILE,TILE);
+
+      // crop
+      if(crops[y][x]===1){
+        ctx.fillStyle="yellow";
+        ctx.fillRect(x*TILE+12,y*TILE+12,16,16);
+      }
+      if(crops[y][x]===2){
+        ctx.fillStyle="orange";
+        ctx.fillRect(x*TILE+8,y*TILE+8,24,24);
+      }
+    }
+  }
+
+  // player
+  ctx.fillStyle="blue";
+  ctx.fillRect(player.x*TILE+8,player.y*TILE+8,24,24);
+}
+
+function msg(text){
+  document.getElementById("msg").innerText=text;
+  setTimeout(()=>document.getElementById("msg").innerText="",1000);
+}
+
+document.addEventListener("keydown",e=>{
+  let nx=player.x;
+  let ny=player.y;
+
+  if(e.key==="w") ny--;
+  if(e.key==="s") ny++;
+  if(e.key==="a") nx--;
+  if(e.key==="d") nx++;
+
+  if(nx>=0&&ny>=0&&nx<MAP&&ny<MAP){
+    player.x=nx;
+    player.y=ny;
+  }
+
+  if(e.key===" "){
+    if(map[player.y][player.x]==="soil"){
+      if(crops[player.y][player.x]===0){
+        crops[player.y][player.x]=1;
+        msg("ปลูกผักแล้ว");
+      }else if(crops[player.y][player.x]===2){
+        crops[player.y][player.x]=0;
+        msg("เก็บผักได้!");
+      }
+    }
+  }
+});
+
+function update(){
+  ticks++;
+  if(ticks%300===0){
+    time=time==="Morning"?"Evening":"Morning";
+    if(time==="Morning"){
+      day++;
+      growCrops();
+    }
+    document.getElementById("day").innerText="Day: "+day;
+    document.getElementById("time").innerText="Time: "+time;
+  }
+}
+
+function growCrops(){
+  for(let y=0;y<MAP;y++){
+    for(let x=0;x<MAP;x++){
+      if(crops[y][x]===1) crops[y][x]=2;
+    }
+  }
+}
+
+function loop(){
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+
+</body>
+</html>
